@@ -1,0 +1,10 @@
+{
+	"settings": {
+		"httpPort": 80,
+		"queenbridgeUrl": "http://localhost:8080"
+	},
+	"topics": [{
+		"id": "room_events",
+		"subscribers": ["timebraslet-cyan", "asteroids"]
+	}]
+}
