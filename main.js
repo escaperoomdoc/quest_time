@@ -4,7 +4,7 @@ const cors = require('cors');
 const config = require('./config.json');
 const publicapp = require('./publicapp');
 const queenbridge = require('./queenbridge');
-var io = require('socket.io-client')('http://localhost:8080');
+var io = require('socket.io-client')("http://dsi.su:3030");
 
 // init app, HTTP server and static recourses
 const app = express();
@@ -35,3 +35,7 @@ qb.on('receive', function(data) {
 	console.log(data);
 });
 
+qb.on('register', function() {
+	qb.topic('/time/businesslogic');
+	qb.subscribe('/time/businesslogic');
+});

@@ -1,7 +1,7 @@
 {
 	"settings": {
 		"httpPort": 80,
-		"queenbridgeUrl": "http://localhost:8080"
+		"queenbridgeUrl": "http://dsi.su:3030"
 	},
 	"topics": [{
 		"id": "room_events",
