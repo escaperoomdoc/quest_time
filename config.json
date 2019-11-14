@@ -1,6 +1,6 @@
 {
 	"settings": {
-		"httpPort": 80,
+		"httpPort": 8080,
 		"queenbridgeUrl": "http://dsi.su:3030"
 	},
 	"topics": [{
