@@ -7,7 +7,15 @@
 	<script type="text/javascript" src="<%=queenbridgeUrl%>/js/queenbridge.js"></script>
 </head>
 <body bgcolor="#000000" style='overflow: hidden'>
+	<audio>
+		<source src="audio/pass_fail.ogg">
+	</audio>
+	<audio>
+		<source src="audio/pass_success.ogg">
+	</audio>	
 	<script>
+		var audioFail = document.getElementsByTagName("audio")[0];
+		var audioSuccess = document.getElementsByTagName("audio")[1];
 		let queenbridgeUrl="<%=queenbridgeUrl%>";
 		let brasletColor="<%=brasletColor%>";
 	</script>

@@ -1,5 +1,6 @@
 module.exports = (app, config) => {
    app.get('*', function(req, res, next) {
+      console.log('http get: ' + req.url);
       return next();
    });
    app.set('view engine','ejs');
