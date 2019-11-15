@@ -17,47 +17,25 @@ colors['purple'] = 0xFF00FF;
 colors['cyan'] = 0x00FFFF;
 colorNames=['red', 'green', 'blue', 'yellow', 'purple', 'cyan'];
 
-var SpriteObject = function (gameProperty) {
-	this.sprite = {};
+// implements base sprite functions: activate and deactivate
+var BaseSprite = function () {
 	this.activeSprites = false;
 	this.activate = function() {
 		this.activeSprites = true;
-		this.sprite.gameProperty = gameProperty;
+		this.sprite.gameProperty = this.gameProperty;
 		app.stage.addChild(this.sprite);
 	}
 	this.deactivate = function() {
 		this.activeSprites = false;
 		for (var i = app.stage.children.length - 1; i >= 0; i--) {
-			if (app.stage.children[i].gameProperty === gameProperty) app.stage.removeChild(app.stage.children[i]);
+			if (app.stage.children[i].gameProperty === this.gameProperty) app.stage.removeChild(app.stage.children[i]);
 		};	
 	}
 	this.animate = function() {
-		var breakPointPlace = 0;
+		var stub = 0;
 	}
 };
-
-// create a new Sprite from an image path.
-var Frame = function() {
-	// init members
-	this.bg = PIXI.Sprite.fromImage('js/bg.png');
-	this.bg.anchor.set(0.5);
-	this.bg.x = screenWidth / 2;
-	this.bg.y = screenHeight / 2;
-	this.activeSprites = false;
-	this.activate = function() {
-		this.activeSprites = true;
-		this.bg.gameProperty = "frame";
-		app.stage.addChild(this.bg);
-	}
-	this.deactivate = function() {
-		this.activeSprites = false;
-		for (var i = app.stage.children.length - 1; i >= 0; i--) {
-			if (app.stage.children[i].gameProperty === "frame") app.stage.removeChild(app.stage.children[i]);
-		};	
-	}
-	this.animate = function() {
-	}
-};
+baseSprite = new BaseSprite;
 
 var textStyleTime = new PIXI.TextStyle({
 	fontFamily: 'Arial',	//'Berlin Sans FB', 'Candara'
@@ -100,32 +78,39 @@ var textStyleError = new PIXI.TextStyle({
 });
 
 
-String.prototype.padLeft = function (length, character) { 
-     return new Array(length - this.length + 1).join(character || '0') + this; 
-}
 
-var Time = function(time, style, x, y, gameProperty, interactive) {
-	this.textSprite = new PIXI.Text('9999∙99∙99 99∙99∙99', style);
-	this.textSprite.x = x;
-	this.textSprite.y = y;
-	this.updateText = function(time) {
-		this.text  = time.years.toString().padLeft(4, '0');
-		this.text += '∙';
-		this.text += time.months.toString().padLeft(2, '0');
-		this.text += '∙';
-		this.text += time.days.toString().padLeft(2, '0');
-		this.text += ' ';
-		this.text += time.hours.toString().padLeft(2, '0');
-		this.text += '∙';
-		this.text += time.mins.toString().padLeft(2, '0');
-		this.text += '∙';
-		this.text += time.secs.toString().padLeft(2, '0');
-		this.textSize = this.text.length;
-		this.textSprite.text = this.text;
+
+var Text = function(text, style, x, y, gameProperty) {
+	this.gameProperty = gameProperty;
+	this.sprite = new PIXI.Text(text, style);
+	this.sprite.x = x;
+	this.sprite.y = y;
+	this.setText = function(text) {
+		this.text = text;
+		this.sprite.text = this.text;
 	}	
-	this.time = {};
-	this.prev = {};
-	this.animateFlag = false;
+	this.setText(text);
+}
+Text.prototype = baseSprite;
+
+var BaseTime = function () {
+	String.prototype.padLeft = function (length, character) { 
+		return new Array(length - this.length + 1).join(character || '0') + this; 
+ 	}
+	this.updateText = function(time) {
+		text  = time.years.toString().padLeft(4, '0');
+		text += '∙';
+		text += time.months.toString().padLeft(2, '0');
+		text += '∙';
+		text += time.days.toString().padLeft(2, '0');
+		text += ' ';
+		text += time.hours.toString().padLeft(2, '0');
+		text += '∙';
+		text += time.mins.toString().padLeft(2, '0');
+		text += '∙';
+		text += time.secs.toString().padLeft(2, '0');
+		this.sprite.text = text;
+	}
 	this.raw2time = function(time) {
 		time.mins = Math.floor(time.raw / 60);
 		time.secs = time.raw - time.mins * 60;
@@ -137,7 +122,21 @@ var Time = function(time, style, x, y, gameProperty, interactive) {
 		time.days = time.days - time.months * 30;
 		time.years = Math.floor(time.months / 12);
 		time.months = time.months - time.years * 12;
-	}
+	}	
+}
+BaseTime.prototype = baseSprite;
+baseTime = new BaseTime();
+
+var Time = function(time, style, x, y, gameProperty, interactive) {
+	this.gameProperty = gameProperty;
+	this.sprite = new PIXI.Text('9999∙99∙99 99∙99∙99', style);
+	this.sprite.x = x;
+	this.sprite.y = y;
+	
+	this.time = {};
+	this.prev = {};
+	this.animateFlag = false;
+
 	this.setTime = function(value, animate) {
 		this.prev.raw = this.time.raw;
 		this.time.raw = value;
@@ -155,7 +154,8 @@ var Time = function(time, style, x, y, gameProperty, interactive) {
 		var that = this;
 		that.animateFrame = 0;
 		that.animateFrames = 25;
-		that.animateDelta = Math.floor((this.time.raw - this.prev.raw) / that.animateFrames);
+		that.animateDelta = Math.floor((this.time.raw - this.prev.raw) / (that.animateFrames + 1));
+		if (that.animateDelta < 0) that.animateDelta ++;
 		function animateFunc() {
 			that.prev.raw += that.animateDelta;
 			that.raw2time(that.prev);
@@ -171,9 +171,9 @@ var Time = function(time, style, x, y, gameProperty, interactive) {
 		return false;
 	}
 	if (interactive) {
-		this.textSprite.interactive = true;
-		this.textSprite.buttonMode = true;	
-		this.textSprite.on('pointertap', (event ) => {
+		this.sprite.interactive = true;
+		this.sprite.buttonMode = true;	
+		this.sprite.on('pointertap', (event ) => {
 			if (this.pointInRect(event.data.global.x, event.data.global.y, 80, 500, 270, 120)) {
 				if (++this.time.years > 9999) this.time.years = 0;
 			}
@@ -195,51 +195,15 @@ var Time = function(time, style, x, y, gameProperty, interactive) {
 			value = 	this.time.secs + this.time.mins * 60 + this.time.hours * 3600 +
 						this.time.days * 86400 + this.time.months * 2592000 + this.time.years * 31104000;
 			this.setTime(value);
-			buttonTap(this.textSprite.gameProperty);
+			buttonTap(this.sprite.gameProperty);
 		});	
-	}
-	this.activeSprites = false;
-	this.activate = function() {
-		this.activeSprites = true;
-		this.textSprite.gameProperty = gameProperty;
-		app.stage.addChild(this.textSprite);
-	}
-	this.deactivate = function() {
-		this.activeSprites = false;
-		for (var i = app.stage.children.length - 1; i >= 0; i--) {
-			if (app.stage.children[i].gameProperty === gameProperty) app.stage.removeChild(app.stage.children[i]);
-			i --;
-		};	
 	}
 	this.animate = function() {
 	}	
 };
+Time.prototype = baseTime;
 
-var Text = function(text, style, x, y, gameProperty) {
-	this.textSprite = new PIXI.Text(text, style);
-	this.textSprite.x = x;
-	this.textSprite.y = y;
-	this.setText = function(text) {
-		this.text = text;
-		this.textSize = this.text.length;
-		this.textSprite.text = this.text;
-	}	
-	this.setText(text);
-	this.activeSprites = false;
-	this.activate = function() {
-		this.activeSprites = true;
-		this.textSprite.gameProperty = gameProperty;
-		app.stage.addChild(this.textSprite);
-	}
-	this.deactivate = function() {
-		this.activeSprites = false;
-		for (var i = app.stage.children.length - 1; i >= 0; i--) {
-			if (app.stage.children[i].gameProperty === gameProperty) app.stage.removeChild(app.stage.children[i]);
-		};	
-	}
-	this.animate = function() {
-	}	
-}
+
 
 var Live = function(colorName, x, y, radius) {
 	this.colorName = colorName;
@@ -368,7 +332,6 @@ var Arrow = function(x, y, gameProperty) {
 }
 
 var items = {};
-items['frame'] = new Frame();
 items['error'] = new Text('', textStyleError, 10, 10, 'zone');
 items['live'] = new Live(brasletColor, 120, 130, 40);
 items['zone'] = new Text('ЗАВОД', textStyleZone, 920, 85, 'zone');
@@ -382,7 +345,6 @@ items['buttonCancel'] = new Button(950, 350, 'buttonCancel');
 items['arrow'] = new Arrow(620, 400, 'arrow');
 
 function gotoError(error) {
-//	items['frame'].deactivate();
 	items['error'].activate();
 	items['error'].setText(error);
 	items['live'].deactivate();
@@ -399,7 +361,6 @@ function gotoError(error) {
 gotoError('waiting for connection...');
 
 function gotoStart() {
-//	items['frame'].activate();
 	items['live'].activate();
 	items['zone'].activate();
 	items['time'].activate();
@@ -415,10 +376,10 @@ function gotoStart() {
 function buttonTap(buttonName) {
 	if (buttonName === 'pass') {
 		if (items['pass'].time.raw > items['time'].time.raw) {
-			items['pass'].textSprite.style = textStylePassError;
+			items['pass'].sprite.style = textStylePassError;
 		}
 		else {
-			items['pass'].textSprite.style = textStylePass;
+			items['pass'].sprite.style = textStylePass;
 		}
 	}
 	if (buttonName === 'buttonPasschar') {
@@ -430,7 +391,7 @@ function buttonTap(buttonName) {
 		items['buttonCancel'].activate();
 		items['arrow'].activate();
 		items['pass'].setTime(0);
-		items['pass'].textSprite.style = textStylePass;
+		items['pass'].sprite.style = textStylePass;
 	}
 	if (buttonName === 'buttonOk' || buttonName === 'buttonCancel') {
 		if (buttonName === 'buttonOk') {
